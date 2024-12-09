@@ -6,7 +6,10 @@
 use std::time::Duration;
 
 use bevy::{
-    color::palettes::css::*, input::common_conditions::input_just_pressed, prelude::*,
+    color::palettes::css::*,
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    input::common_conditions::input_just_pressed,
+    prelude::*,
     time::common_conditions::on_real_timer,
 };
 
@@ -17,6 +20,7 @@ fn main() {
             file_path: "../../assets".to_string(),
             ..default()
         }))
+        .add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()))
         .insert_resource(Time::<Fixed>::from_seconds(0.25))
         .add_systems(Startup, setup)
         .add_systems(FixedUpdate, move_fixed_time_sprites)
