@@ -34,4 +34,4 @@ unsafe_op_in_unsafe_fn = "warn"
 unused_qualifications = "warn"
 
 [workspace.dependencies]
-bevy = "0.15.0-rc.3"
+bevy = "0.15.0"
