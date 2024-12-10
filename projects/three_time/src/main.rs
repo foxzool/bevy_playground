@@ -3,7 +3,7 @@
 //! - 固定时间
 //! - 虚拟时间
 
-use std::time::Duration;
+use core::time::Duration;
 
 use bevy::{
     color::palettes::css::*,
@@ -21,15 +21,18 @@ fn main() {
             ..default()
         }))
         .add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()))
+        // 设置固定时间为0.25秒
         .insert_resource(Time::<Fixed>::from_seconds(0.25))
         .add_systems(Startup, setup)
-        .add_systems(FixedUpdate, move_fixed_time_sprites)
+        // .add_systems(FixedUpdate, )
         .add_systems(
             Update,
             (
                 move_virtual_time_sprites,
                 move_real_time_sprites,
+                move_fixed_time_sprites,
                 toggle_pause.run_if(input_just_pressed(KeyCode::Space)),
+                block_system.run_if(input_just_pressed(KeyCode::KeyP)),
                 change_time_speed::<1>.run_if(input_just_pressed(KeyCode::ArrowUp)),
                 change_time_speed::<-1>.run_if(input_just_pressed(KeyCode::ArrowDown)),
                 (
@@ -182,6 +185,7 @@ fn move_real_time_sprites(
     // 真实时间不能缩放和暂停
     time: Res<Time<Real>>,
 ) {
+    info!("Update");
     for mut transform in sprite_query.iter_mut() {
         // move roughly half the screen in a `Real` second
         // when the time is scaled the speed is going to change
@@ -190,15 +194,17 @@ fn move_real_time_sprites(
     }
 }
 
-/// 移动真实时间图标
+/// 移动固定时间图标
 fn move_fixed_time_sprites(
     mut sprite_query: Query<&mut Transform, (With<Sprite>, With<FixedTime>)>,
     time: Res<Time<Fixed>>,
 ) {
+    info!("FixedUpdate overstep {:.5}", time.overstep().as_secs_f32());
     for mut transform in sprite_query.iter_mut() {
         // move roughly half the screen in a `Real` second
         // when the time is scaled the speed is going to change
         // and the sprite will stay still the time is paused
+
         transform.translation.x = get_sprite_translation_x(time.elapsed_secs());
     }
 }
@@ -247,7 +253,7 @@ fn toggle_pause(mut time: ResMut<Time<Virtual>>) {
 fn update_real_time_info_text(time: Res<Time<Real>>, mut query: Query<&mut Text, With<RealTime>>) {
     for mut text in &mut query {
         **text = format!(
-            "固定时间\nElapsed: {:.1}\nDelta: {:.5}\n",
+            "真实时间\nElapsed: {:.1}\nDelta: {:.5}\n",
             time.elapsed_secs(),
             time.delta_secs(),
         );
@@ -282,4 +288,9 @@ fn update_virtual_time_info_text(
             time.relative_speed()
         );
     }
+}
+
+fn block_system() {
+    warn!("阻塞3秒");
+    std::thread::sleep(Duration::from_secs(3));
 }
